@@ -1,112 +1,104 @@
-# Instacart-reorder-prediction
-Deep learning-based reorder prediction using tabular features from Instacart orders dataset.
-# Product Reorder Prediction using Deep Learning
+#  Instacart Reorder Prediction (FFNN Model)
 
-## Project Overview
+This project predicts whether a user will reorder a product based on their historical shopping behavior using a **feedforward neural network (FFNN)**. It involves data cleaning, feature engineering, preprocessing, and model training.
 
-This project aims to predict whether a user will reorder a product based on their past order history and product information. We use a combination of feature engineering, resampling techniques to handle imbalanced data, and a fully connected feed-forward neural network (FFNN) to build a robust classification model.
+---
 
-Key components include:
+##  Project Structure
 
-Data preprocessing and feature engineering on large-scale order datasets.
-User, product, and user-product aggregated features extraction.
-Handling class imbalance using SMOTEENN (a hybrid over- and under-sampling method).
-Training an improved FFNN model with batch normalization and dropout for regularization.
-Model evaluation with precision-recall threshold tuning and multiple classification metrics.
-Saving the trained model for future inference.
+- **Raw Input**: Instacart dataset (CSV format)
+- **Steps**:
+  1. Merge and chunk large files (`orders`, `order_products__prior`, etc.)
+  2. Generate `prior_data.csv` and `train_labels.csv`
+  3. Feature engineering → `final_features.csv`
+  4. Preprocessing & encoding
+  5. Train FFNN in `model.ipynb`
 
-## Dataset
+---
 
-The dataset is sourced from Instacart orders and includes:
+##  Assumptions
 
-Orders information (`orders.csv`)
-Prior ordered products (`order_products__prior.csv`)
-Training labels (`order_products__train.csv`)
-Product metadata (`products.csv`, `aisles.csv`, `departments.csv`)
+- Files are stored locally and accessible via correct paths.
+- IDs are consistent across datasets (e.g., `user_id`, `product_id`).
+- Feature engineering assumes that prior orders are representative of future behavior.
+- Dataset is too large to load at once → chunked processing used.
+- Classification target is `reordered` (binary: 0 or 1).
 
-## Project Structure
+---
 
-data_processing: Scripts for merging raw data files, chunk-wise processing, and feature aggregation.
-feature_engineering: Scripts for preprocessing, missing value imputation, categorical encoding, and feature scaling.
-train_model: Code for training the neural network model with resampling, early stopping, and learning rate adjustments.
-evaluate_model: Scripts to evaluate model performance, plot confusion matrix, and print classification metrics.
-ffnn_model.h5: Saved trained neural network model.
-model.ipynb: full code
-README.md: This file with project overview and instructions.
+##  Data Files
+
+| File | Description |
+
+| `orders.csv` | Metadata of all orders |
+| `order_products__prior.csv` | Products from prior orders |
+| `order_products__train.csv` | Training labels |
+| `products.csv`, `aisles.csv`, `departments.csv` | Product metadata |
+| `prior_data.csv` | Chunked merge of prior orders + metadata |
+| `train_labels.csv` | Merged training data |
+| `final_features.csv` | Engineered features for modeling |
 
 
+## ⚙️ Preprocessing Steps
 
-## Setup and Installation
+- **Merging & chunking**: Large CSVs are processed in chunks to avoid memory issues.
+- **Feature Engineering**:
+  - **User-level**: reorder ratio, total orders, days between orders.
+  - **Product-level**: reorder rate, total times ordered, add-to-cart behavior.
+  - **User-Product-level**: frequency of reorders, last order info, reorder gap.
+- **Missing Values**:
+  - Categorical → mode
+  - Numerical → median
+- **Encoding**:
+  - Categorical IDs → category codes
+  - Label encoding for product metadata
+- **Scaling**:
+  - Standardized numerical features (`StandardScaler`)
 
-1. **Clone the repository:**
 
-    '''bash
-    git clone https://github.com/MYTHILIPRIYA96/instacart-reorder-prediction
-    '''
+##  Model Architecture
 
-2. **Create and activate a Python environment (recommended):**
+A 3-layer Feedforward Neural Network (defined in `model.ipynb`) with:
+- Dense layers + ReLU
+- Batch normalization
+- Dropout
+- Output: Sigmoid activation (binary classification)
 
-    '''bash
-    python -m venv venv
-    source venv/bin/activate  # Linux/macOS
-    venv\Scripts\activate     # Windows
-    '''
+##  Evaluation Metrics
 
-3. **Install required dependencies:**
+- Precision, Recall, F1 Score, Accuracy
+- ROC-AUC
+- Confusion Matrix
+- Threshold tuning using Precision-Recall Curve
+-  Save the trained model as `ffnn_model.h5`
+-  
+##  Inference and Prediction
 
-    '''bash
-    pip install -r requirements.txt
-    '''
-
-    *(If 'requirements.txt' is not provided, install manually:)*
-
-    '''bash
-    pip install pandas scikit-learn tensorflow matplotlib seaborn imbalanced-learn
-    '''
-
-## Usage Instructions
-
-### 1. Data Processing
-
- Run data_processing to load raw CSV files, merge datasets in chunks, and generate aggregated feature files (`final_features.csv`) and training labels (`train_labels.csv`).
-
-### 2. Feature Engineering
-
- Execute feature_engineering to perform:
-   Missing value imputation
-   Categorical encoding (Label Encoding and Category Codes)
-   Numerical feature scaling with StandardScaler
-
-### 3. Model Training and Evaluation
-
-Use train_model to:
-Load processed features and labels
-Perform train/validation/test split with stratification
-Apply SMOTEENN resampling to balance the training set
-Train an improved feed-forward neural network with callbacks (early stopping, learning rate reduction)
-Evaluate model on the test set with optimized thresholding
-Save the trained model as `ffnn_model.h5`
-
-### 4. Inference and Prediction
-
-Load ffnn_model.h5 in your application to predict reorder probabilities for new user-product pairs.
-Use the same preprocessing pipeline to prepare input features before prediction.
-
-## Evaluation Metrics
-
- Accuracy
- Precision
- Recall
- F1 Score
- ROC-AUC
- Confusion Matrix visualization
-
+- Load `ffnn_model.h5` in your application to predict reorder probabilities for new user-product pairs.
+- Use the same preprocessing pipeline to prepare input features before prediction.
 
 ## Notes
 
- The dataset is large; processing is performed in chunks to manage memory efficiently.
- Threshold tuning is performed on precision-recall curve to maximize F1 score, suitable for imbalanced classification.
- The model architecture uses dropout and batch normalization to improve generalization.
+- The dataset is large; processing is performed in chunks to manage memory efficiently.
+- Threshold tuning is performed on precision-recall curve to maximize F1 score, 
+  suitable for imbalanced classification.
+- The model architecture uses dropout and batch normalization to improve 
+   generalization.
+## Reproducibility
+
+- Global seed used: `42`
+- Applies to:
+  - `numpy`, `random`, `tensorflow` seeds
+  - `train_test_split(random_state=42)`
+  - `SMOTEENN(random_state=42)`
+- Consistent use of `astype` and `fillna` to control types and NAs
+
+## Requirements
+
+Install all dependencies via:
+
+```bash
+pip install -r requirements.txt
 
 ## License
 
