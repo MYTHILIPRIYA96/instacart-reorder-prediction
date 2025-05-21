@@ -56,7 +56,7 @@ Stratified split into training, validation, and test sets to preserve class dist
 
 Resampling
 
-Use SMOTEENN to oversample minority class and clean overlapping points in the training data to mitigate class imbalance.
+Use SMOTEto oversample minority class and clean overlapping points in the training data to mitigate class imbalance.
 
 ## Modeling Steps
 Model Architecture
