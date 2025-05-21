@@ -108,13 +108,6 @@ Use the same preprocessing pipeline to prepare input features before prediction.
  Threshold tuning is performed on precision-recall curve to maximize F1 score, suitable for imbalanced classification.
  The model architecture uses dropout and batch normalization to improve generalization.
 
-## Contact
-
-For questions or contributions, please contact:
-
-**Your Name** — your.email@example.com  
-GitHub: [MYTHILIPRIYA96](https://github.MYTHILIPRIYA)
-
 ## License
 
 This project is licensed under the MIT License.
