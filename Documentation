@@ -1,0 +1,101 @@
+## Assumptions
+ User Behavior Stability: Past reorder behavior is predictive of future reorders.
+
+ Data Completeness: Some missing values may exist and are handled through imputation.
+
+Class Imbalance: The dataset is imbalanced with fewer reorder cases than non-reorders.
+
+Categorical Encoding: Categorical features can be safely encoded as integers without losing meaning.
+
+Data Volume: Data is large, necessitating chunk-wise loading to avoid memory issues.
+
+Randomness Control: Fixed random seeds ensure reproducibility of results.
+
+## Preprocessing Steps
+Data Loading
+
+Large datasets loaded in chunks to reduce memory footprint.
+
+Dataframes are concatenated after chunk processing.
+
+Type Optimization
+
+Convert categorical fields to category dtype to save memory and speed up processing.
+
+Data Merging
+
+Combine order data, product metadata, user history, and reorder labels to create a master dataset.
+
+Feature Engineering
+
+Generate aggregated user features (e.g., number of orders, reorder ratios).
+
+Generate product features (e.g., reorder rate, average cart position).
+
+Generate user-product interaction features (e.g., count of user-product orders, reorder counts).
+
+Create ratio and frequency features to capture relative behavior.
+
+Handling Missing Values
+
+Numerical features imputed with median values.
+
+Categorical missing values filled with the mode of the respective feature.
+
+Feature Encoding
+
+Convert categorical features to numeric category codes for model compatibility.
+
+Scaling
+
+Numerical features are standardized (zero mean, unit variance).
+
+Data Splitting
+
+Stratified split into training, validation, and test sets to preserve class distribution.
+
+Resampling
+
+Use SMOTEENN to oversample minority class and clean overlapping points in the training data to mitigate class imbalance.
+
+## Modeling Steps
+Model Architecture
+
+Feed-forward neural network with three hidden layers (256, 128, 64 units).
+
+Each hidden layer followed by Batch Normalization and Dropout for regularization.
+
+Sigmoid output layer for binary classification.
+
+Compilation
+
+Binary crossentropy loss.
+
+Adam optimizer with initial learning rate of 0.001.
+
+Training
+
+Early stopping based on validation loss to prevent overfitting.
+
+Learning rate reduction on plateau.
+
+Batch size of 512.
+
+Maximum 20 epochs.
+
+Threshold Optimization
+
+Determine optimal probability threshold using precision-recall curve to maximize F1 score instead of default 0.5.
+
+Evaluation
+
+Metrics: Accuracy, Precision, Recall, F1 Score, ROC-AUC.
+
+Confusion matrix plotted for visual inspection of prediction quality.
+
+## Reproducibility
+Fixed random seeds for numpy, tensorflow, and Python's built-in random module.
+
+Deterministic data splits and resampling.
+
+Consistent model initialization via fixed seeds.
