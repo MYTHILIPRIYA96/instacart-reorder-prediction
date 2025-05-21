@@ -90,7 +90,7 @@ A 3-layer Feedforward Neural Network (defined in `model.ipynb`) with:
 - Applies to:
   - `numpy`, `random`, `tensorflow` seeds
   - `train_test_split(random_state=42)`
-  - `SMOTEENN(random_state=42)`
+  - `SMOTE(random_state=42)`
 - Consistent use of `astype` and `fillna` to control types and NAs
 
 ## Requirements
