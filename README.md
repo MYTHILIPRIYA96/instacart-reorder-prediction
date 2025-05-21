@@ -41,8 +41,7 @@ README.md: This file with project overview and instructions.
 1. **Clone the repository:**
 
     '''bash
-    git clone https://github.com/mythilipriya/product-reorder-prediction.git
-    cd product-reorder-prediction
+    git clone https://github.com/mythilipriya/product-reorder-prediction
     '''
 
 2. **Create and activate a Python environment (recommended):**
