@@ -1,101 +1,150 @@
+# Project Documentation: Deep Learning-Based Reorder Prediction
+
+## Overview
+
+This project aims to build a binary classification model using deep learning to predict whether a user will reorder a product,
+based on tabular features derived from the Instacart Orders dataset.
+
 ## Assumptions
- User Behavior Stability: Past reorder behavior is predictive of future reorders.
 
- Data Completeness: Some missing values may exist and are handled through imputation.
+* Users are likely to reorder products they previously purchased.
+* Product reordering depends on both user behavior and product characteristics.
+* Tabular data, when properly engineered, can be effectively modeled with deep learning.
 
-Class Imbalance: The dataset is imbalanced with fewer reorder cases than non-reorders.
+## Data Loading and Preprocessing
 
-Categorical Encoding: Categorical features can be safely encoded as integers without losing meaning.
+### 1. Load Labels in Chunks
 
-Data Volume: Data is large, necessitating chunk-wise loading to avoid memory issues.
+'''python
+for chunk in pd.read_csv(labels_path, chunksize=500000, ...):
+    chunk['reordered'] = chunk['reordered'].fillna(0).astype('int8')
+'''
 
-Randomness Control: Fixed random seeds ensure reproducibility of results.
+**Purpose** 
 
-## Preprocessing Steps
-Data Loading
+Efficiently load large training label files by chunks and fill missing `reordered` values with 0.
 
-Large datasets loaded in chunks to reduce memory footprint.
+### 2. Merge Features with Labels
 
-Dataframes are concatenated after chunk processing.
+'''python
+for chunk in features_iter:
+    chunk = chunk.merge(train_labels, on=['user_id', 'product_id'], how='left')
+'''
 
-Type Optimization
+**Purpose** 
 
-Convert categorical fields to category dtype to save memory and speed up processing.
+Align features with correct labels, marking missing ones as not reordered.
 
-Data Merging
+### 3. Handle Missing Values
 
-Combine order data, product metadata, user history, and reorder labels to create a master dataset.
+'''python
+features[col] = features[col].fillna(mode_val/median_val)
+'''
 
-Feature Engineering
+**Purpose:** 
 
-Generate aggregated user features (e.g., number of orders, reorder ratios).
+Fill missing categorical values with mode and numerical with median.
 
-Generate product features (e.g., reorder rate, average cart position).
+### 4. Encode Categorical Variables
 
-Generate user-product interaction features (e.g., count of user-product orders, reorder counts).
+'''python
+features[col] = LabelEncoder().fit_transform(features[col])
+'''
 
-Create ratio and frequency features to capture relative behavior.
+**Purpose:** 
 
-Handling Missing Values
+Transform strings to numeric labels for modeling.
 
-Numerical features imputed with median values.
+### 5. Normalize Numerical Features
 
-Categorical missing values filled with the mode of the respective feature.
+'''python
+features[numerical_columns] = StandardScaler().fit_transform(features[numerical_columns])
+'''
 
-Feature Encoding
+**Purpose:**
 
-Convert categorical features to numeric category codes for model compatibility.
+Standardize numeric columns for better convergence during training.
 
-Scaling
+## Feature Description
 
-Numerical features are standardized (zero mean, unit variance).
+### Categorical Features
 
-Data Splitting
+* 'product_name', 'aisle', 'department'
+* 'user_order_dow_mode', 'user_order_hour_mode'
+* 'product_dow_mode', 'product_order_hour_mode'
 
-Stratified split into training, validation, and test sets to preserve class distribution.
+### Numerical Features
 
-Resampling
+* User behavior: 'total_orders', 'avg_days_between_orders', 'user_reorder_ratio'
+* Product stats: 'total_times_ordered', 'reorder_rate', 'product_avg_days_between_orders'
+* User-product interactions: 'times_user_ordered_product', 'user_product_order_rate'
 
-Use SMOTEto oversample minority class and clean overlapping points in the training data to mitigate class imbalance.
+## Sampling and Balancing
 
-## Modeling Steps
-Model Architecture
+'''python
+df_majority_downsampled = features[features.reordered == 0].sample(n=200_000)
+df_minority = features[features.reordered == 1)
+'''
 
-Feed-forward neural network with three hidden layers (256, 128, 64 units).
+**Purpose:** Address class imbalance by downsampling and applying SMOTE.
 
-Each hidden layer followed by Batch Normalization and Dropout for regularization.
 
-Sigmoid output layer for binary classification.
+## Model Architecture: Feedforward Neural Network (FFNN)
 
-Compilation
+'''python
+model = Sequential([
+    Input(shape=(X_train.shape[1],)),
+    Dense(128, activation='relu'),
+    BatchNormalization(),
+    Dropout(0.3),
+    Dense(64, activation='relu'),
+    BatchNormalization(),
+    Dropout(0.3),
+    Dense(1, activation='sigmoid')
+])
+'''
 
-Binary crossentropy loss.
+### Configuration
 
-Adam optimizer with initial learning rate of 0.001.
+* **Optimizer:** Adam (lr=0.001)
+* **Loss:** Binary Crossentropy
+* **Regularization:** Dropout (0.3), BatchNorm
+* **Output:** Sigmoid for binary classification
 
-Training
+## Training Strategy
 
-Early stopping based on validation loss to prevent overfitting.
+'''python
+model.fit(..., callbacks=[EarlyStopping(...), ReduceLROnPlateau(...)])
+'''
 
-Learning rate reduction on plateau.
+**Purpose:** Prevent overfitting and reduce learning rate on validation loss plateau.
 
-Batch size of 512.
+## Evaluation Metrics
 
-Maximum 20 epochs.
+'''python
+thresholds = np.arange(0.1, 0.9, 0.01)
+'''
 
-Threshold Optimization
+* Optimal threshold is selected based on **F1 Score**.
 
-Determine optimal probability threshold using precision-recall curve to maximize F1 score instead of default 0.5.
+### Metrics Reported:
 
-Evaluation
+* Accuracy
+* Precision
+* Recall
+* F1 Score
+* ROC-AUC
 
-Metrics: Accuracy, Precision, Recall, F1 Score, ROC-AUC.
+### Confusion Matrix
 
-Confusion matrix plotted for visual inspection of prediction quality.
+Visualized using 'seaborn.heatmap()'to show classification performance.
 
-## Reproducibility
-Fixed random seeds for numpy, tensorflow, and Python's built-in random module.
+## Outputs
 
-Deterministic data splits and resampling.
+* Preprocessed file: 'preprocessed_features.csv'
+* Trained model: 'ffnn_model.h5'
 
-Consistent model initialization via fixed seeds.
+
+## Conclusion
+
+This project demonstrates how deep learning models can be applied effectively to structured data when supported by solid feature engineering and preprocessing strategies. The combination of SMOTE, balanced datasets, and a carefully tuned FFNN provides a strong baseline for reorder prediction tasks.
